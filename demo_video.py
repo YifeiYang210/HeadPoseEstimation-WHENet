@@ -8,8 +8,7 @@ from yolo_v3.yolo_postprocess import YOLO
 from PIL import Image
 
 
-def process_detection( model, img, bbox, args ):
-
+def process_detection(model, img, bbox, args):
     y_min, x_min, y_max, x_max = bbox
     # enlarge the bbox to include more background margin
     y_min = max(0, y_min - abs(y_min - y_max) / 10)
@@ -23,25 +22,27 @@ def process_detection( model, img, bbox, args ):
     img_rgb = cv2.resize(img_rgb, (224, 224))
     img_rgb = np.expand_dims(img_rgb, axis=0)
 
-    cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0,0,0), 2)
+    cv2.rectangle(img, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 0, 0), 2)
     yaw, pitch, roll = model.get_angle(img_rgb)
     yaw, pitch, roll = np.squeeze([yaw, pitch, roll])
-    draw_axis(img, yaw, pitch, roll, tdx=(x_min+x_max)/2, tdy=(y_min+y_max)/2, size = abs(x_max-x_min)//2 )
+    draw_axis(img, yaw, pitch, roll, tdx=(x_min + x_max) / 2, tdy=(y_min + y_max) / 2, size=abs(x_max - x_min) // 2)
 
     if args.display == 'full':
-        cv2.putText(img, "yaw: {}".format(np.round(yaw)), (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (100, 255, 0), 1)
-        cv2.putText(img, "pitch: {}".format(np.round(pitch)), (int(x_min), int(y_min) - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (100, 255, 0), 1)
-        cv2.putText(img, "roll: {}".format(np.round(roll)), (int(x_min), int(y_min)-30), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (100, 255, 0), 1)
+        cv2.putText(img, "yaw: {}".format(np.round(yaw)), (int(x_min), int(y_min)), cv2.FONT_HERSHEY_SIMPLEX, 0.4,
+                    (100, 255, 0), 1)
+        cv2.putText(img, "pitch: {}".format(np.round(pitch)), (int(x_min), int(y_min) - 15), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.4, (100, 255, 0), 1)
+        cv2.putText(img, "roll: {}".format(np.round(roll)), (int(x_min), int(y_min) - 30), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.4, (100, 255, 0), 1)
     return img
-
 
 
 def main(args):
     whenet = WHENet(snapshot=args.snapshot)
     yolo = YOLO(**vars(args))
-    VIDEO_SRC = 0 if args.video == '' else args.video # if video clip is passed, use web cam
-    cap = cv2.VideoCapture(VIDEO_SRC)
-    print('cap info',VIDEO_SRC)
+    VIDEO_SRC = 0 if args.video == '' else args.video  # if video clip is passed, use web cam
+    cap = cv2.VideoCapture(0)
+    print('cap info', VIDEO_SRC)
     ret, frame = cap.read()
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
     out = cv2.VideoWriter(args.output, fourcc, 30, (frame.shape[1], frame.shape[0]))  # write the result to a video
@@ -56,7 +57,7 @@ def main(args):
         bboxes, scores, classes = yolo.detect(img_pil)
         for bbox in bboxes:
             frame = process_detection(whenet, frame, bbox, args)
-        cv2.imshow('output',frame)
+        cv2.imshow('output', frame)
         out.write(frame)
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"):
@@ -66,9 +67,11 @@ def main(args):
     cap.release()
     cv2.destroyAllWindows()
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='whenet demo with yolo')
-    parser.add_argument('--video', type=str, default='IMG_0176.mp4',         help='path to video file. use camera if no file is given')
+    parser.add_argument('--video', type=str, default='IMG_0176.mp4',
+                        help='path to video file. use camera if no file is given')
     parser.add_argument('--snapshot', type=str, default='WHENet.h5', help='whenet snapshot path')
     parser.add_argument('--display', type=str, default='simple', help='display all euler angle (simple, full)')
     parser.add_argument('--score', type=float, default=0.3, help='yolo confidence score threshold')

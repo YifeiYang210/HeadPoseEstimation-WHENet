@@ -3,6 +3,7 @@ import keras
 import numpy as np
 from utils import softmax
 
+
 class WHENet:
     def __init__(self, snapshot=None):
         base_model = efn.EfficientNetB0(include_top=False, input_shape=(224, 224, 3))
